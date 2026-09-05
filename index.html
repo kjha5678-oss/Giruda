@@ -2,153 +2,207 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>기루다 (Giruda) 데모</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>기루다 (Giruda)</title>
     <style>
-        body { font-family: 'Apple SD Gothic Neo', sans-serif; background: #1a4314; color: #fff; margin: 0; padding: 20px; user-select: none; }
-        h1 { text-align: center; margin-bottom: 5px; font-size: 24px; }
-        .score-board { display: flex; justify-content: center; gap: 40px; margin-bottom: 15px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; }
-        
-        /* 게임 테이블 레이아웃 */
-        .table-container { position: relative; width: 700px; height: 500px; margin: 0 auto; background: #226f16; border: 8px solid #10330b; border-radius: 150px; box-shadow: inset 0 0 30px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; }
-        
-        .player-seat { position: absolute; text-align: center; font-size: 14px; background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 20px; }
-        #seat-top { top: 15px; }
-        #seat-left { left: 15px; top: 50%; transform: translateY(-50%); }
-        #seat-right { right: 15px; top: 50%; transform: translateY(-50%); }
-        #seat-bottom { bottom: 15px; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #111; color: #fff; margin: 0; padding: 0; 
+            overflow: hidden; user-select: none; 
+        }
 
-        .dealer-badge { background: #ffcc00; color: #000; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
-        
-        /* 중앙 플레이 영역 */
-        .center-area { width: 300px; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .played-card { width: 50px; height: 75px; background: white; color: black; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-weight: bold; position: absolute; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        #card-top { top: 10px; }
-        #card-left { left: 10px; top: 60px; }
-        #card-right { right: 10px; top: 60px; }
-        #card-bottom { bottom: 10px; }
+        /* 전체 게임 컨테이너 (모바일 화면 최적화) */
+        .game-wrapper {
+            display: flex; flex-direction: column; justify-content: space-between;
+            width: 100vw; height: 100vh; background: #332211; padding: 10px;
+        }
 
-        /* 로그 및 컨트롤 패널 */
-        .control-panel { width: 700px; margin: 20px auto; background: #11380c; padding: 15px; border-radius: 10px; box-sizing: border-box; }
-        .log-box { height: 100px; background: rgba(0,0,0,0.4); border: 1px solid #336d2c; border-radius: 5px; padding: 10px; overflow-y: auto; font-size: 13px; line-height: 1.4; margin-bottom: 10px; }
-        
-        .action-box { text-align: center; }
-        button { background: #ffcc00; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; font-size: 14px; margin: 0 5px; }
-        button:hover { background: #e6b800; }
-        button:disabled { background: #555; color: #888; cursor: not-allowed; }
+        /* 상단 스코어 및 정보 바 */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 8px; font-size: 13px;
+        }
 
-        /* 내 패 스타일 */
-        .my-hand-container { width: 700px; margin: 10px auto; text-align: center; }
-        .hand-cards { display: flex; justify-content: center; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
-        .card { width: 45px; height: 65px; background: white; color: black; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; cursor: pointer; transition: transform 0.2s; border: 1px solid #ccc; position: relative; }
-        .card:hover { transform: translateY(-8px); }
+        /* 메인 녹색 테이블 */
+        .table-felt {
+            position: relative; flex: 1; background: #1e5631; 
+            border: 6px solid #4a2e18; border-radius: 30px; 
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
+            margin: 8px 0; display: flex; justify-content: center; align-items: center;
+        }
+
+        /* 플레이어 아바타 및 자리 */
+        .seat { position: absolute; text-align: center; font-size: 11px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 5px; }
+        #seat-top { top: 10px; left: 50%; transform: translateX(-50%); }
+        #seat-left { left: 10px; top: 50%; transform: translateY(-50%); }
+        #seat-right { right: 10px; top: 50%; transform: translateY(-50%); }
+        #seat-bottom { bottom: 70px; left: 50%; transform: translateX(-50%); }
+
+        .dealer-badge { background: #ffcc00; color: #000; padding: 1px 4px; border-radius: 3px; font-weight: bold; font-size: 10px; }
+
+        /* 테이블 중앙 카드 놓이는 자리 */
+        .center-felt { width: 220px; height: 160px; position: relative; }
+        .played-card {
+            width: 45px; height: 65px; background: white; color: black; border-radius: 4px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: bold; position: absolute; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            border: 1px solid #ccc;
+        }
+        .played-card.red { color: #d32f2f; }
+        #card-top { top: 0; left: 50%; transform: translateX(-50%); }
+        #card-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+        #card-left { left: 10px; top: 50%; transform: translateY(-50%); }
+        #card-right { right: 10px; top: 50%; transform: translateY(-50%); }
+
+        /* 내 손패 영역 */
+        .my-hand-area {
+            background: rgba(0,0,0,0.3); padding: 8px; border-radius: 10px; text-align: center; min-height: 110px;
+        }
+        .my-hand-title { font-size: 12px; margin-bottom: 5px; color: #ddd; }
+        .hand-cards { display: flex; justify-content: center; overflow-x: auto; gap: -15px; padding-bottom: 5px; }
+        
+        /* 카드 디자인 */
+        .card {
+            min-width: 42px; width: 42px; height: 62px; background: white; color: black;
+            border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: bold; cursor: pointer; transition: transform 0.2s, margin 0.2s;
+            border: 1px solid #bbb; box-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative;
+            margin-right: -15px; /* 카드 겹침 효과 */
+        }
+        .card:last-child { margin-right: 0; }
+        .card:hover, .card.selected { transform: translateY(-12px); border-color: #ffcc00; z-index: 10; }
         .card.red { color: #d32f2f; }
-        .card.selected { border: 3px solid #ffcc00; transform: translateY(-10px); }
+
+        /* 강조 팝업 모달 (뽝 뜨는 느낌!) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.75); display: flex; justify-content: center; align-items: center;
+            z-index: 1000; display: none;
+        }
+        .modal-box {
+            background: #2a1810; border: 3px solid #ffcc00; border-radius: 15px;
+            padding: 20px; width: 90%; max-width: 320px; text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #ffcc00; }
+        .modal-desc { font-size: 13px; margin-bottom: 15px; color: #ddd; line-height: 1.4; }
+        .modal-buttons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        
+        button.game-btn {
+            background: linear-gradient(to bottom, #ffcc00, #e69500); border: none; color: #111;
+            padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+        }
+        button.game-btn:active { transform: scale(0.96); }
+        button.game-btn.pass { background: linear-gradient(to bottom, #777, #555); color: #fff; }
+
+        /* 하단 컨트롤 패널 (로그 대체) */
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
+        .live-log { font-size: 11px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; }
     </style>
 </head>
 <body>
 
-    <h1>기루다 (Giruda) 데모</h1>
-    
-    <div class="score-board">
-        <div>공격팀 (나 & 파트너): <span id="score-attack">0</span> 점</div>
-        <div>수비팀 (좌 & 우): <span id="score-defense">0</span> 점</div>
-        <div>현재 라운드 정보: <span id="round-info">대기 중</span></div>
-    </div>
+    <div class="game-wrapper">
+        <!-- 상단 바 -->
+        <div class="top-bar">
+            <div>⚔️ 공격: <span id="score-attack" style="color:#ffcc00; font-weight:bold;">0</span></div>
+            <div>🛡️ 수비: <span id="score-defense" style="color:#ffcc00; font-weight:bold;">0</span></div>
+            <div>라운드: <span id="round-num">1</span></div>
+        </div>
 
-    <!-- 테이블 화면 -->
-    <div class="table-container">
-        <div id="seat-top" class="player-seat">파트너 (상단) <span id="badge-top" class="dealer-badge" style="display:none">선</span></div>
-        <div id="seat-left" class="player-seat">수비1 (좌측) <span id="badge-left" class="dealer-badge" style="display:none">선</span></div>
-        <div id="seat-right" class="player-seat">수비2 (우측) <span id="badge-right" class="dealer-badge" style="display:none">선</span></div>
-        <div id="seat-bottom" class="player-seat">나 (플레이어) <span id="badge-bottom" class="dealer-badge" style="display:none">선</span></div>
+        <!-- 메인 테이블 -->
+        <div class="table-felt">
+            <div id="seat-top" class="seat">🐶 파트너 <span id="badge-top" class="dealer-badge" style="display:none">선</span></div>
+            <div id="seat-left" class="seat">🐱 수비1 <span id="badge-left" class="dealer-badge" style="display:none">선</span></div>
+            <div id="seat-right" class="seat">🐰 수비2 <span id="badge-right" class="dealer-badge" style="display:none">선</span></div>
+            <div id="seat-bottom" class="seat">😎 나 <span id="badge-bottom" class="dealer-badge" style="display:none">선</span></div>
 
-        <div class="center-area">
-            <div id="card-top" class="played-card" style="display:none"></div>
-            <div id="card-left" class="played-card" style="display:none"></div>
-            <div id="card-right" class="played-card" style="display:none"></div>
-            <div id="card-bottom" class="played-card" style="display:none"></div>
+            <!-- 중앙 카드 플레이 공간 -->
+            <div class="center-felt">
+                <div id="card-top" class="played-card" style="display:none"></div>
+                <div id="card-left" class="played-card" style="display:none"></div>
+                <div id="card-right" class="played-card" style="display:none"></div>
+                <div id="card-bottom" class="played-card" style="display:none"></div>
+            </div>
+        </div>
+
+        <!-- 내 손패 영역 -->
+        <div class="my-hand-area">
+            <div class="my-hand-title">내 손패 (<span id="hand-count">0</span>장)</div>
+            <div id="my-hand" class="hand-cards"></div>
+            
+            <div class="action-bar">
+                <div id="live-log" class="live-log">게임 시작 버튼을 눌러주세요!</div>
+                <button class="game-btn" onclick="startNewGame()">게임 시작</button>
+            </div>
         </div>
     </div>
 
-    <!-- 조작 패널 및 로그 -->
-    <div class="control-panel">
-        <div id="game-log" class="log-box">게임에 오신 것을 환영합니다! 게임 시작 버튼을 눌러주세요.<br></div>
-        <div class="action-box" id="action-area">
-            <button onclick="startNewGame()">게임 시작 / 새 라운드</button>
+    <!-- 중앙 팝업 모달창 (배팅, 기루다선택 등 이벤트용) -->
+    <div id="game-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modal-title" class="modal-title">알림</div>
+            <div id="modal-desc" class="modal-desc">내용이 들어갑니다.</div>
+            <div id="modal-buttons" class="modal-buttons">
+                <!-- 동적 버튼 생성 -->
+            </div>
         </div>
-    </div>
-
-    <!-- 내 카드 패 -->
-    <div class="my-hand-container">
-        <div>내 손패 (<span id="hand-count">0</span>장)</div>
-        <div id="my-hand" class="hand-cards"></div>
     </div>
 
 <script>
-    // 게임 상태 변수
-    let gameState = 'WAITING'; // WAITING, BIDDING, DISCARD, TRUMP_SELECT, PLAYING, ROUND_END
-    let dealerIndex = 0; // 0: 나, 1: 우측수비, 2: 파트너, 3: 좌측수비 (시계방향: 나->우->상->좌? 룰에 맞게 조정)
-    // 룰: 선마커 기준 오른쪽 사람에게 넘어감. 
-    // 자리 배치 (시계방향 순서 정의): 0: 나(하단), 1: 우측수비, 2: 파트너(상단), 3: 좌측수비
-    // 시계방향 이동: 나(0) -> 우측(1) -> 파트너(2) -> 좌측(3) -> 나(0)
-    
-    let scores = { attack: 0, defense: 0 };
-    let currentBid = 1; // 최소 2점부터 시작이므로 초기값 1
+    let gameState = 'WAITING'; 
+    let dealerIndex = 0; // 0: 나, 1: 우측수비, 2: 파트너, 3: 좌측수비
+    let currentBid = 1;
     let bidder = -1;
-    let turnPlayer = 0;
-    let trumpSuit = '';
-    
     let myHand = [];
-    let tableCards = [null, null, null, null]; // 0:나, 1:우, 2:파트너, 3:좌
-    let floorCards = []; // 바닥패 2장
-    
+    let floorCards = [];
+    let trumpSuit = '';
+
     const suits = ['♠', '◆', '♥', '♣'];
     const suitNames = {'♠':'스페이드', '◆':'다이아', '♥':'하트', '♣':'클로버'};
 
     function log(msg) {
-        const box = document.getElementById('game-log');
-        box.innerHTML += msg + '<br>';
-        box.scrollTop = box.scrollHeight;
+        document.getElementById('live-log').innerText = msg;
+    }
+
+    function showModal(title, desc, buttonsHtml) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-desc').innerText = desc;
+        document.getElementById('modal-buttons').innerHTML = buttonsHtml;
+        document.getElementById('game-modal').style.display = 'flex';
+    }
+
+    function hideModal() {
+        document.getElementById('game-modal').style.display = 'none';
     }
 
     function createDeck() {
         let deck = [];
         suits.forEach(s => {
-            for (let i = 2; i <= 14; i++) { // 14는 에이스
-                deck.push({ suit: s, rank: i, type: 'normal' });
-            }
+            for (let i = 2; i <= 14; i++) deck.push({ suit: s, rank: i });
         });
         deck.push({ suit: 'JOKER', rank: 15, type: 'BLACK_JOKER' });
         deck.push({ suit: 'JOKER', rank: 16, type: 'COLOR_JOKER' });
-        // 셔플
         return deck.sort(() => Math.random() - 0.5);
     }
 
     function startNewGame() {
-        log('--------------------------------');
-        log('새로운 라운드를 시작합니다.');
         let deck = createDeck();
-        
-        // 13장씩 분배
         myHand = deck.splice(0, 13);
-        // AI들 패 지급 (실제 시뮬레이션용 카운트만 유지)
-        floorCards = deck.splice(0, 2); // 바닥패 2장
+        floorCards = deck.splice(0, 2);
         
         renderHand();
         updateBadges();
 
-        gameState = 'BIDDING';
-        turnPlayer = dealerIndex; // 선플레이어부터 배팅 시작
-        currentBid = 1; 
-        bidder = -1;
-
-        log(`선플레이어(${getPlayerName(turnPlayer)})부터 배팅을 시작합니다.`);
-        processBiddingStep();
-    }
-
-    function getPlayerName(idx) {
-        const names = ['나', '우측 수비', '파트너', '좌측 수비'];
-        return names[idx];
+        log('라운드 시작! 선플레이어부터 배팅을 진행합니다.');
+        // 배팅 페이즈 오픈 (임시로 유저 배팅 테스트 팝업 호출)
+        startBiddingPhase();
     }
 
     function updateBadges() {
@@ -157,147 +211,40 @@
         });
     }
 
-    // 배팅 페이즈 처리 (AI 및 유저 통합)
-    function processBiddingStep() {
-        if (turnPlayer === 0) {
-            // 유저 차례 배팅 UI 활성화
-            showBiddingUI();
-        } else {
-            // AI 차례 배팅 (간단히 확률적으로 패스 또는 점수 선언)
-            setTimeout(() => {
-                let aiBidChance = Math.random();
-                if (aiBidChance > 0.6 && currentBid < 6) {
-                    currentBid++;
-                    bidder = turnPlayer;
-                    log(`${getPlayerName(turnPlayer)}님이 ${currentBid}점을 배팅했습니다.`);
-                } else {
-                    log(`${getPlayerName(turnPlayer)}님이 패스했습니다.`);
-                }
-                nextBiddingTurn();
-            }, 800);
+    function startBiddingPhase() {
+        // 모달로 뽝 뜨는 배팅 UI
+        let btnHtml = '';
+        for(let i = 2; i <= 6; i++) {
+            btnHtml += `<button class="game-btn" onclick="userBid(${i})">${i}점</button>`;
         }
-    }
-
-    function showBiddingUI() {
-        let html = `내 차례입니다. 배팅할 점수를 선택하세요 (현재 최고: ${currentBid}점 이상)<br>`;
-        for(let i = Math.max(2, currentBid + 1); i <= 6; i++) {
-            html += `<button onclick="userBid(${i})">${i}점</button>`;
-        }
-        html += `<button onclick="userBid('pass')">패스</button>`;
-        document.getElementById('action-area').innerHTML = html;
+        btnHtml += `<button class="game-btn pass" onclick="userBid('pass')">패스</button>`;
+        
+        showModal('배팅 (Bidding)', '원하시는 점수를 선택하세요. (최소 2점)', btnHtml);
     }
 
     function userBid(val) {
-        if (val === 'pass') {
-            log('내가 패스했습니다.');
+        hideModal();
+        if(val === 'pass') {
+            log('패스하셨습니다. (모두 패스 시 선플레이어 2점 강제)');
+            bidder = dealerIndex; // 데모 간소화: 패스 시 선 강제배팅 시뮬레이션
+            currentBid = 2;
         } else {
             currentBid = val;
             bidder = 0;
-            log(`내가 ${currentBid}점을 배팅했습니다.`);
+            log(`내가 ${currentBid}점을 배팅하여 공격팀이 되었습니다!`);
         }
-        nextBiddingTurn();
-    }
-
-    let passCount = 0;
-    function nextBiddingTurn() {
-        // 다음 사람 (시계 방향: 0 -> 1 -> 2 -> 3 -> 0)
-        let nextPlayer = (turnPlayer + 1) % 4;
         
-        // 한바퀴 돌았는지 체크 로직 간단화 (4명 모두 완료 시점 판정)
-        // 데모의 단순화를 위해 배팅 루프를 돌고 최종 결정 단계로 이동
-        if (nextPlayer === dealerIndex) {
-            // 배팅 종료 판정
-            finishBidding();
-        } else {
-            turnPlayer = nextPlayer;
-            processBiddingStep();
-        }
-    }
-
-    function finishBidding() {
-        if (bidder === -1) {
-            // 모두 패스했을 경우 선플레이어가 강제로 2점 선언
-            bidder = dealerIndex;
-            currentBid = 2;
-            log(`모두 패스하여 선플레이어(${getPlayerName(dealerIndex)})가 강제로 2점을 선언합니다!`);
-        } else {
-            log(`배팅 낙찰! ${getPlayerName(bidder)}님 팀이 ${currentBid}점으로 공격측이 되었습니다.`);
-        }
-
         // 디카드 페이즈 진입
-        gameState = 'DISCARD';
-        if (bidder === 0) {
-            log(`바닥패 2장을 획득했습니다. 총 15장 중 버릴 카드 2장을 선택해주세요.`);
-            myHand = myHand.concat(floorCards);
-            renderHandForDiscard();
-        } else {
-            log(`AI가 바닥패를 정리하고 기루다를 선언합니다...`);
-            setTimeout(finishDiscardAndTrump, 1500);
-        }
+        setTimeout(startDiscardPhase, 600);
     }
 
-    // 유저 디카드 UI
-    function renderHandForDiscard() {
-        renderHand(true); // 선택 모드
-        document.getElementById('action-area').innerHTML = `<button onclick="confirmDiscard()">선택한 카드 2장 버리기</button>`;
+    function startDiscardPhase() {
+        log('바닥패 2장을 획득했습니다. 총 15장 중 버릴 카드 2장을 선택하세요.');
+        myHand = myHand.concat(floorCards);
+        renderHand(true); // 선택 모드 활성화
     }
 
-    let selectedCardsForDiscard = [];
-    function toggleCardSelect(idx) {
-        const el = document.getElementById(`card-el-${idx}`);
-        if (selectedCardsForDiscard.includes(idx)) {
-            selectedCardsForDiscard = selectedCardsForDiscard.filter(i => i !== idx);
-            el.classList.remove('selected');
-        } else {
-            if (selectedCardsForDiscard.length < 2) {
-                selectedCardsForDiscard.push(idx);
-                el.classList.add('selected');
-            }
-        }
-    }
-
-    function confirmDiscard() {
-        if (selectedCardsForDiscard.length !== 2) {
-            alert('정확히 2장의 카드를 선택해주세요.');
-            return;
-        }
-        // 내 손패에서 버리기 (인덱스 높은 것부터 제거해야 꼬이지 않음)
-        selectedCardsForDiscard.sort((a,b) => b - a);
-        selectedCardsForDiscard.forEach(idx => myHand.splice(idx, 1));
-        selectedCardsForDiscard = [];
-        
-        renderHand();
-        log(`카드를 버렸습니다. 기루다를 선언합니다.`);
-        showTrumpSelectUI();
-    }
-
-    function finishDiscardAndTrump() {
-        trumpSuit = suits[Math.floor(Math.random() * suits.length)];
-        log(`[기루다 선언] 이번 라운드의 기루다는 **${suitNames[trumpSuit]} (${trumpSuit})**입니다!`);
-        startTrickPlay();
-    }
-
-    function showTrumpSelectUI() {
-        let html = `기루다 문양을 선택하세요: `;
-        suits.forEach(s => {
-            html += `<button onclick="selectTrump('${s}')">${suitNames[s]} (${s})</button>`;
-        });
-        document.getElementById('action-area').innerHTML = html;
-    }
-
-    function selectTrump(s) {
-        trumpSuit = s;
-        log(`[기루다 선언] 내가 ${suitNames[s]} (${s})를 기루다로 선언했습니다!`);
-        startTrickPlay();
-    }
-
-    function startTrickPlay() {
-        gameState = 'PLAYING';
-        log(`트릭 플레이가 시작되었습니다. (첫 턴에는 조커/기루다 사용 제한 적용)`);
-        document.getElementById('action-area').innerHTML = `현재 기루다: <b>${suitNames[trumpSuit]} (${trumpSuit})</b> - 카드 클릭으로 내기`;
-        renderHand();
-    }
-
+    let selectedForDiscard = [];
     function renderHand(isDiscardMode = false) {
         const container = document.getElementById('my-hand');
         container.innerHTML = '';
@@ -317,41 +264,62 @@
             if (c.type === 'BLACK_JOKER') rankStr = 'BIZ';
             if (c.type === 'COLOR_JOKER') rankStr = 'COL';
 
-            div.innerHTML = `<span>${c.suit}</span><span>${rankStr}</span>`;
+            div.innerHTML = `<span style="font-size:10px">${c.suit}</span><span style="font-size:14px">${rankStr}</span>`;
             
             if (isDiscardMode) {
-                div.onclick = () => toggleCardSelect(idx);
-            } else if (gameState === 'PLAYING') {
-                div.onclick = () => playUserCard(idx);
+                div.onclick = () => toggleDiscardSelect(idx);
             }
             container.appendChild(div);
         });
     }
 
-    function playUserCard(idx) {
-        let card = myHand.splice(idx, 1)[0];
-        renderHand();
-        log(`내가 카드를 냈습니다: ${card.suit} ${card.rank}`);
-        
-        // 화면에 카드 표시
-        const cardEl = document.getElementById('card-bottom');
-        cardEl.innerText = `${card.suit}\n${card.rank}`;
-        cardEl.style.display = 'flex';
+    function toggleDiscardSelect(idx) {
+        const el = document.getElementById(`card-el-${idx}`);
+        if(selectedForDiscard.includes(idx)) {
+            selectedForDiscard = selectedForDiscard.filter(i => i !== idx);
+            el.classList.remove('selected');
+        } else {
+            if(selectedForDiscard.length < 2) {
+                selectedForDiscard.push(idx);
+                el.classList.add('selected');
+            }
+        }
 
-        // 라운드 종료 후 선마커 이동 테스트를 위한 간이 시뮬레이션 완료 트리거
-        setTimeout(() => {
-            endRoundDemo();
-        }, 2000);
+        if(selectedForDiscard.length === 2) {
+            showModal('디카드 완료', '선택한 2장의 카드를 버리시겠습니까?', `<button class="game-btn" onclick="confirmDiscard()">확인</button>`);
+        }
     }
 
-    function endRoundDemo() {
-        log(`라운드가 종료되었습니다!`);
-        // 선 마커 오른쪽으로 이동 규칙 적용
-        dealerIndex = (dealerIndex + 1) % 4;
-        log(`선 마커가 다음 사람(${getPlayerName(dealerIndex)})에게 이동합니다.`);
-        updateBadges();
+    function confirmDiscard() {
+        hideModal();
+        selectedForDiscard.sort((a,b) => b - a);
+        selectedForDiscard.forEach(idx => myHand.splice(idx, 1));
+        selectedForDiscard = [];
+        renderHand();
+        
+        // 기루다 선택 팝업 오픈
+        let btnHtml = '';
+        suits.forEach(s => {
+            btnHtml += `<button class="game-btn" onclick="selectTrump('${s}')">${suitNames[s]} (${s})</button>`;
+        });
+        showModal('기루다 선언', '이번 라운드의 기루다 문양을 선택하세요.', btnHtml);
+    }
 
-        document.getElementById('action-area').innerHTML = `<button onclick="startNewGame()">다음 라운드 시작</button>`;
+    function selectTrump(s) {
+        hideModal();
+        trumpSuit = s;
+        log(`기루다 선언 완료: [ ${suitNames[s]} (${s}) ]`);
+        
+        // 데모 라운드 종료 테스트용 버튼 제공
+        showModal('테스트 완료', 'UI 가시성과 모달 팝업 느낌이 어떤지 확인해보세요!', `<button class="game-btn" onclick="nextRoundDemo()">다음 라운드로 넘어가기</button>`);
+    }
+
+    function nextRoundDemo() {
+        hideModal();
+        dealerIndex = (dealerIndex + 1) % 4; // 선 마커 오른쪽 이동
+        updateBadges();
+        log('선 마커가 다음 플레이어에게 이동했습니다.');
+        startNewGame();
     }
 </script>
 
