@@ -1,327 +1,886 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>기루다 (Giruda)</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: #111; color: #fff; margin: 0; padding: 0; 
-            overflow: hidden; user-select: none; 
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>기루다 (Giruda)</title>
 
-        /* 전체 게임 컨테이너 (모바일 화면 최적화) */
-        .game-wrapper {
-            display: flex; flex-direction: column; justify-content: space-between;
-            width: 100vw; height: 100vh; background: #332211; padding: 10px;
-        }
+  <style>
+    * { box-sizing: border-box; }
 
-        /* 상단 스코어 및 정보 바 */
-        .top-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 8px; font-size: 13px;
-        }
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
 
-        /* 메인 녹색 테이블 */
-        .table-felt {
-            position: relative; flex: 1; background: #1e5631; 
-            border: 6px solid #4a2e18; border-radius: 30px; 
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.6);
-            margin: 8px 0; display: flex; justify-content: center; align-items: center;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #111;
+      color: #fff;
+      overflow: hidden;
+      user-select: none;
+    }
 
-        /* 플레이어 아바타 및 자리 */
-        .seat { position: absolute; text-align: center; font-size: 11px; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 12px; display: flex; align-items: center; gap: 5px; }
-        #seat-top { top: 10px; left: 50%; transform: translateX(-50%); }
-        #seat-left { left: 10px; top: 50%; transform: translateY(-50%); }
-        #seat-right { right: 10px; top: 50%; transform: translateY(-50%); }
-        #seat-bottom { bottom: 70px; left: 50%; transform: translateX(-50%); }
+    .game-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      padding: 10px;
+      background: #332211;
+    }
 
-        .dealer-badge { background: #ffcc00; color: #000; padding: 1px 4px; border-radius: 3px; font-weight: bold; font-size: 10px; }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex: 0 0 auto;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      gap: 10px;
+    }
 
-        /* 테이블 중앙 카드 놓이는 자리 */
-        .center-felt { width: 220px; height: 160px; position: relative; }
-        .played-card {
-            width: 45px; height: 65px; background: white; color: black; border-radius: 4px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: bold; position: absolute; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            border: 1px solid #ccc;
-        }
-        .played-card.red { color: #d32f2f; }
-        #card-top { top: 0; left: 50%; transform: translateX(-50%); }
-        #card-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
-        #card-left { left: 10px; top: 50%; transform: translateY(-50%); }
-        #card-right { right: 10px; top: 50%; transform: translateY(-50%); }
+    .score-value {
+      color: #ffcc00;
+      font-weight: 700;
+    }
 
-        /* 내 손패 영역 */
-        .my-hand-area {
-            background: rgba(0,0,0,0.3); padding: 8px; border-radius: 10px; text-align: center; min-height: 110px;
-        }
-        .my-hand-title { font-size: 12px; margin-bottom: 5px; color: #ddd; }
-        .hand-cards { display: flex; justify-content: center; overflow-x: auto; gap: -15px; padding-bottom: 5px; }
-        
-        /* 카드 디자인 */
-        .card {
-            min-width: 42px; width: 42px; height: 62px; background: white; color: black;
-            border-radius: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: bold; cursor: pointer; transition: transform 0.2s, margin 0.2s;
-            border: 1px solid #bbb; box-shadow: 0 2px 4px rgba(0,0,0,0.3); position: relative;
-            margin-right: -15px; /* 카드 겹침 효과 */
-        }
-        .card:last-child { margin-right: 0; }
-        .card:hover, .card.selected { transform: translateY(-12px); border-color: #ffcc00; z-index: 10; }
-        .card.red { color: #d32f2f; }
+    .table-felt {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      margin: 8px 0;
+      background: radial-gradient(circle at center, #2b7041 0%, #1e5631 55%, #174427 100%);
+      border: 6px solid #4a2e18;
+      border-radius: 30px;
+      box-shadow:
+        inset 0 0 40px rgba(0, 0, 0, 0.55),
+        0 4px 12px rgba(0, 0, 0, 0.3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
 
-        /* 강조 팝업 모달 (뽝 뜨는 느낌!) */
-        .modal-overlay {
-            position: relative; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.75); display: flex; justify-content: center; align-items: center;
-            z-index: 1000; display: none;
-        }
-        .modal-box {
-            background: #2a1810; border: 3px solid #ffcc00; border-radius: 15px;
-            padding: 20px; width: 90%; max-width: 320px; text-align: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .modal-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #ffcc00; }
-        .modal-desc { font-size: 13px; margin-bottom: 15px; color: #ddd; line-height: 1.4; }
-        .modal-buttons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-        
-        button.game-btn {
-            background: linear-gradient(to bottom, #ffcc00, #e69500); border: none; color: #111;
-            padding: 10px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 13px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
-        }
-        button.game-btn:active { transform: scale(0.96); }
-        button.game-btn.pass { background: linear-gradient(to bottom, #777, #555); color: #fff; }
+    .seat {
+      position: absolute;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.55);
+      font-size: 11px;
+      white-space: nowrap;
+      backdrop-filter: blur(2px);
+    }
 
-        /* 하단 컨트롤 패널 (로그 대체) */
-        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 6px; }
-        .live-log { font-size: 11px; color: #aaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65%; }
-    </style>
+    #seat-top {
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #seat-left {
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #seat-right {
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #seat-bottom {
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .dealer-badge {
+      display: none;
+      background: #ffcc00;
+      color: #000;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 800;
+      font-size: 10px;
+    }
+
+    /* 상대 플레이어 손패: 카드 뒷면을 부채꼴로 표시 */
+    .opponent-hand {
+      position: absolute;
+      z-index: 2;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .opponent-card {
+      position: absolute;
+      width: 30px;
+      height: 44px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.72);
+      background: repeating-linear-gradient(45deg, #173a29 0px, #173a29 4px, #23563c 4px, #23563c 8px);
+      box-shadow: 0 3px 7px rgba(0,0,0,0.42);
+      transform-origin: 50% 100%;
+    }
+
+    .opponent-card::after {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 3px;
+    }
+
+    .opponent-hand-top {
+      top: 34px;
+      left: 50%;
+      width: 160px;
+      height: 52px;
+      transform: translateX(-50%);
+    }
+
+    .opponent-hand-top .opponent-card {
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%) rotate(var(--fan-angle)) translateY(var(--fan-y));
+    }
+
+    .opponent-hand-left {
+      left: 34px;
+      top: 50%;
+      width: 52px;
+      height: 160px;
+      transform: translateY(-50%);
+    }
+
+    .opponent-hand-left .opponent-card {
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%) rotate(calc(var(--fan-angle) + 90deg)) translateX(var(--fan-y));
+    }
+
+    .opponent-hand-right {
+      right: 34px;
+      top: 50%;
+      width: 52px;
+      height: 160px;
+      transform: translateY(-50%);
+    }
+
+    .opponent-hand-right .opponent-card {
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%) rotate(calc(var(--fan-angle) - 90deg)) translateX(calc(var(--fan-y) * -1));
+    }
+
+    .center-felt {
+      position: relative;
+      width: min(58vw, 240px);
+      height: min(42vw, 170px);
+      min-width: 190px;
+      min-height: 135px;
+    }
+
+    .played-card {
+      position: absolute;
+      width: 46px;
+      height: 66px;
+      background: #fff;
+      color: #111;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .played-card.red {
+      color: #d32f2f;
+    }
+
+    #card-top {
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #card-bottom {
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #card-left {
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    #card-right {
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .my-hand-area {
+      flex: 0 0 auto;
+      min-height: 128px;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.34);
+      text-align: center;
+    }
+
+    .my-hand-title {
+      margin-bottom: 6px;
+      color: #ddd;
+      font-size: 12px;
+    }
+
+    .hand-cards {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      min-height: 72px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 12px 6px 4px;
+      scrollbar-width: none;
+    }
+
+    .hand-cards::-webkit-scrollbar {
+      display: none;
+    }
+
+    .card {
+      position: relative;
+      flex: 0 0 auto;
+      width: 44px;
+      height: 64px;
+      margin-right: -15px;
+      background: #fff;
+      color: #111;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      transition: transform 0.18s ease, border-color 0.18s ease;
+    }
+
+    .card:last-child {
+      margin-right: 0;
+    }
+
+    .card:hover,
+    .card.selected {
+      transform: translateY(-10px);
+      border-color: #ffcc00;
+      z-index: 20;
+    }
+
+    .card.red {
+      color: #d32f2f;
+    }
+
+    .joker-card {
+      background: linear-gradient(135deg, #fff, #ddd);
+    }
+
+    .action-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .live-log {
+      flex: 1 1 auto;
+      min-width: 0;
+      color: #bbb;
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+
+    button.game-btn {
+      border: none;
+      border-radius: 7px;
+      padding: 10px 14px;
+      background: linear-gradient(to bottom, #ffcc00, #e69500);
+      color: #111;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.28);
+    }
+
+    button.game-btn:active {
+      transform: scale(0.97);
+    }
+
+    button.game-btn.pass {
+      background: linear-gradient(to bottom, #777, #555);
+      color: #fff;
+    }
+
+    button.game-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.76);
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 340px;
+      padding: 20px;
+      border: 3px solid #ffcc00;
+      border-radius: 16px;
+      background: #2a1810;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8);
+      animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from {
+        transform: scale(0.82);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .modal-title {
+      margin-bottom: 12px;
+      color: #ffcc00;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .modal-desc {
+      margin-bottom: 15px;
+      color: #ddd;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .modal-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    @media (max-width: 420px) {
+      .opponent-hand-top { top: 31px; width: 145px; }
+      .opponent-hand-left { left: 29px; height: 145px; }
+      .opponent-hand-right { right: 29px; height: 145px; }
+      .opponent-card { width: 27px; height: 40px; }
+    }
+
+    @media (max-height: 650px) {
+      .game-wrapper {
+        padding: 6px;
+      }
+
+      .table-felt {
+        margin: 5px 0;
+      }
+
+      .my-hand-area {
+        min-height: 112px;
+      }
+
+      .card {
+        width: 40px;
+        height: 58px;
+      }
+
+      #seat-bottom {
+        bottom: 6px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-
-    <div class="game-wrapper">
-        <!-- 상단 바 -->
-        <div class="top-bar">
-            <div>⚔️ 공격: <span id="score-attack" style="color:#ffcc00; font-weight:bold;">0</span></div>
-            <div>🛡️ 수비: <span id="score-defense" style="color:#ffcc00; font-weight:bold;">0</span></div>
-            <div>라운드: <span id="round-num">1</span></div>
-        </div>
-
-        <!-- 메인 테이블 -->
-        <div class="table-felt">
-            <div id="seat-top" class="seat">🐶 파트너 <span id="badge-top" class="dealer-badge" style="display:none">선</span></div>
-            <div id="seat-left" class="seat">🐱 수비1 <span id="badge-left" class="dealer-badge" style="display:none">선</span></div>
-            <div id="seat-right" class="seat">🐰 수비2 <span id="badge-right" class="dealer-badge" style="display:none">선</span></div>
-            <div id="seat-bottom" class="seat">😎 나 <span id="badge-bottom" class="dealer-badge" style="display:none">선</span></div>
-
-            <!-- 중앙 카드 플레이 공간 -->
-            <div class="center-felt">
-                <div id="card-top" class="played-card" style="display:none"></div>
-                <div id="card-left" class="played-card" style="display:none"></div>
-                <div id="card-right" class="played-card" style="display:none"></div>
-                <div id="card-bottom" class="played-card" style="display:none"></div>
-            </div>
-        </div>
-
-        <!-- 내 손패 영역 -->
-        <div class="my-hand-area">
-            <div class="my-hand-title">내 손패 (<span id="hand-count">0</span>장)</div>
-            <div id="my-hand" class="hand-cards"></div>
-            
-            <div class="action-bar">
-                <div id="live-log" class="live-log">게임 시작 버튼을 눌러주세요!</div>
-                <button class="game-btn" ON-CLICK="startNewGame()">게임 시작</button>
-            </div>
-        </div>
+  <div class="game-wrapper">
+    <div class="top-bar">
+      <div>😎 우리 팀: <span id="score-team0" class="score-value">0</span></div>
+      <div>🤖 상대 팀: <span id="score-team1" class="score-value">0</span></div>
+      <div>라운드: <span id="round-num">1</span></div>
     </div>
 
-    <!-- 중앙 팝업 모달창 (배팅, 기루다선택 등 이벤트용) -->
-    <div id="game-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div id="modal-title" class="modal-title">알림</div>
-            <div id="modal-desc" class="modal-desc">내용이 들어갑니다.</div>
-            <div id="modal-buttons" class="modal-buttons">
-                <!-- 동적 버튼 생성 -->
-            </div>
-        </div>
+    <div class="table-felt">
+      <div id="seat-top" class="seat">
+        🐶 파트너
+        <span id="badge-top" class="dealer-badge">선</span>
+      </div>
+      <div id="opponent-hand-top" class="opponent-hand opponent-hand-top"></div>
+
+      <div id="seat-left" class="seat">
+        🐱 상대1
+        <span id="badge-left" class="dealer-badge">선</span>
+      </div>
+      <div id="opponent-hand-left" class="opponent-hand opponent-hand-left"></div>
+
+      <div id="seat-right" class="seat">
+        🐰 상대2
+        <span id="badge-right" class="dealer-badge">선</span>
+      </div>
+      <div id="opponent-hand-right" class="opponent-hand opponent-hand-right"></div>
+
+      <div id="seat-bottom" class="seat">
+        😎 나
+        <span id="badge-bottom" class="dealer-badge">선</span>
+      </div>
+
+      <div class="center-felt">
+        <div id="card-top" class="played-card"></div>
+        <div id="card-left" class="played-card"></div>
+        <div id="card-right" class="played-card"></div>
+        <div id="card-bottom" class="played-card"></div>
+      </div>
     </div>
 
-<script>
-    let gameState = 'WAITING'; 
-    let dealerIndex = 0; // 0: 나, 1: 우측수비, 2: 파트너, 3: 좌측수비
+    <div class="my-hand-area">
+      <div class="my-hand-title">
+        내 손패 (<span id="hand-count">0</span>장)
+      </div>
+
+      <div id="my-hand" class="hand-cards"></div>
+
+      <div class="action-bar">
+        <div id="live-log" class="live-log">게임 시작 버튼을 눌러주세요!</div>
+        <button id="start-btn" class="game-btn" type="button" onclick="startNewGame()">
+          게임 시작
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="game-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div id="modal-title" class="modal-title">알림</div>
+      <div id="modal-desc" class="modal-desc">내용이 들어갑니다.</div>
+      <div id="modal-buttons" class="modal-buttons"></div>
+    </div>
+  </div>
+
+  <script>
+    let gameState = 'WAITING';
+
+    // 0: 나, 1: 우측수비, 2: 파트너, 3: 좌측수비
+    let dealerIndex = Math.floor(Math.random() * 4);
+
     let currentBid = 1;
     let bidder = -1;
     let myHand = [];
     let floorCards = [];
     let trumpSuit = '';
+    let selectedForDiscard = [];
+    let roundNumber = 1;
 
-    const suits = ['♠', '◆', '♥', '♣'];
-    const suitNames = {'♠':'스페이드', '◆':'다이아', '♥':'하트', '♣':'클로버'};
+    const suits = ['♠', '♦', '♥', '♣'];
+
+    const suitNames = {
+      '♠': '스페이드',
+      '♦': '다이아',
+      '♥': '하트',
+      '♣': '클로버'
+    };
 
     function log(msg) {
-        document.getElementById('live-log').innerText = msg;
+      document.getElementById('live-log').innerText = msg;
     }
 
     function showModal(title, desc, buttonsHtml) {
-        document.getElementById('modal-title').innerText = title;
-        document.getElementById('modal-desc').innerText = desc;
-        document.getElementById('modal-buttons').innerHTML = buttonsHtml;
-        document.getElementById('game-modal').style.display = 'flex';
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-desc').innerText = desc;
+      document.getElementById('modal-buttons').innerHTML = buttonsHtml;
+      document.getElementById('game-modal').style.display = 'flex';
     }
 
     function hideModal() {
-        document.getElementById('game-modal').style.display = 'none';
+      document.getElementById('game-modal').style.display = 'none';
+    }
+
+    function shuffleDeck(deck) {
+      for (let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+      return deck;
     }
 
     function createDeck() {
-        let deck = [];
-        suits.forEach(s => {
-            for (let i = 2; i <= 14; i++) deck.push({ suit: s, rank: i });
-        });
-        deck.push({ suit: 'JOKER', rank: 15, type: 'BLACK_JOKER' });
-        deck.push({ suit: 'JOKER', rank: 16, type: 'COLOR_JOKER' });
-        return deck.sort(() => Math.random() - 0.5);
+      const deck = [];
+
+      suits.forEach((suit) => {
+        for (let rank = 2; rank <= 14; rank++) {
+          deck.push({
+            suit,
+            rank
+          });
+        }
+      });
+
+      deck.push({
+        suit: 'JOKER',
+        rank: 15,
+        type: 'BLACK_JOKER'
+      });
+
+      deck.push({
+        suit: 'JOKER',
+        rank: 16,
+        type: 'COLOR_JOKER'
+      });
+
+      return shuffleDeck(deck);
     }
 
     function startNewGame() {
-        let deck = createDeck();
-        myHand = deck.splice(0, 13);
-        floorCards = deck.splice(0, 2);
-        
-        renderHand();
-        updateBadges();
+      gameState = 'BIDDING';
 
-        log('라운드 시작! 선플레이어부터 배팅을 진행합니다.');
-        // 배팅 페이즈 오픈 (임시로 유저 배팅 테스트 팝업 호출)
-        startBiddingPhase();
+      const deck = createDeck();
+
+      myHand = deck.splice(0, 13);
+      floorCards = deck.splice(0, 2);
+
+      selectedForDiscard = [];
+      currentBid = 1;
+      bidder = -1;
+      trumpSuit = '';
+
+      renderHand();
+      renderOpponentHands();
+      updateBadges();
+
+      document.getElementById('round-num').innerText = roundNumber;
+      document.getElementById('start-btn').innerText = '재시작';
+
+      log('라운드 시작! 선플레이어부터 배팅을 진행합니다.');
+
+      setTimeout(startBiddingPhase, 250);
+    }
+
+    function renderOpponentHand(position, count) {
+      const container = document.getElementById(`opponent-hand-${position}`);
+      if (!container) return;
+
+      container.innerHTML = '';
+      const cardCount = Math.max(0, count);
+      if (cardCount === 0) return;
+
+      const center = (cardCount - 1) / 2;
+      const maxAngle = Math.min(28, 2.2 * (cardCount - 1));
+
+      for (let i = 0; i < cardCount; i++) {
+        const card = document.createElement('div');
+        card.className = 'opponent-card';
+        const normalized = center === 0 ? 0 : (i - center) / center;
+        card.style.setProperty('--fan-angle', `${normalized * maxAngle}deg`);
+        card.style.setProperty('--fan-y', `${Math.abs(normalized) * 5}px`);
+        card.style.zIndex = String(i);
+        container.appendChild(card);
+      }
+    }
+
+    function renderOpponentHands() {
+      renderOpponentHand('top', 13);
+      renderOpponentHand('left', 13);
+      renderOpponentHand('right', 13);
     }
 
     function updateBadges() {
-        ['bottom', 'right', 'top', 'left'].forEach((pos, idx) => {
-            document.getElementById(`badge-${pos}`).style.display = (idx === dealerIndex) ? 'inline-block' : 'none';
-        });
+      const positions = ['bottom', 'right', 'top', 'left'];
+
+      positions.forEach((pos, idx) => {
+        const badge = document.getElementById(`badge-${pos}`);
+        badge.style.display = idx === dealerIndex ? 'inline-block' : 'none';
+      });
     }
 
     function startBiddingPhase() {
-        // 모달로 뽝 뜨는 배팅 UI
-        let btnHtml = '';
-        for(let i = 2; i <= 6; i++) {
-            btnHtml += `<button class="game-btn" ON-CLICK="userBid(${i})">${i}점</button>`;
-        }
-        btnHtml += `<button class="game-btn pass" ON-CLICK="userBid('pass')">패스</button>`;
-        
-        showModal('배팅 (Bidding)', '원하시는 점수를 선택하세요. (최소 2점)', btnHtml);
+      let btnHtml = '';
+
+      for (let i = 2; i <= 6; i++) {
+        btnHtml += `
+          <button class="game-btn" type="button" onclick="userBid(${i})">
+            ${i}점
+          </button>
+        `;
+      }
+
+      btnHtml += `
+        <button class="game-btn pass" type="button" onclick="userBid('pass')">
+          패스
+        </button>
+      `;
+
+      showModal(
+        '배팅 (Bidding)',
+        '원하는 점수를 선택하세요. 현재 데모에서는 내가 즉시 배팅하는 방식으로 진행됩니다.',
+        btnHtml
+      );
     }
 
     function userBid(val) {
-        hideModal();
-        if(val === 'pass') {
-            log('패스하셨습니다. (모두 패스 시 선플레이어 2점 강제)');
-            bidder = dealerIndex; // 데모 간소화: 패스 시 선 강제배팅 시뮬레이션
-            currentBid = 2;
+      hideModal();
+
+      if (val === 'pass') {
+        bidder = dealerIndex;
+        currentBid = 2;
+
+        if (dealerIndex === 0) {
+          log('모두 패스한 것으로 처리되어 내가 2점으로 강제 선을 잡았습니다.');
+          setTimeout(startDiscardPhase, 450);
         } else {
-            currentBid = val;
-            bidder = 0;
-            log(`내가 ${currentBid}점을 배팅하여 공격팀이 되었습니다!`);
+          log('데모에서는 AI 배팅이 아직 없어 선플레이어가 2점으로 낙찰된 것으로 처리합니다.');
+
+          showModal(
+            '데모 안내',
+            '현재 버전에서는 다른 플레이어가 낙찰되었을 때의 AI 디카드 로직이 아직 없습니다. 테스트를 위해 내가 2점으로 낙찰된 상태로 진행합니다.',
+            `<button class="game-btn" type="button" onclick="forceUserBidForDemo()">계속</button>`
+          );
         }
-        
-        // 디카드 페이즈 진입
-        setTimeout(startDiscardPhase, 600);
+
+        return;
+      }
+
+      currentBid = Number(val);
+      bidder = 0;
+
+      log(`내가 ${currentBid}점을 배팅하여 공격팀이 되었습니다!`);
+      setTimeout(startDiscardPhase, 450);
+    }
+
+    function forceUserBidForDemo() {
+      hideModal();
+      bidder = 0;
+      currentBid = 2;
+      log('테스트를 위해 내가 2점 낙찰자로 설정되었습니다.');
+      setTimeout(startDiscardPhase, 300);
     }
 
     function startDiscardPhase() {
-        log('바닥패 2장을 획득했습니다. 총 15장 중 버릴 카드 2장을 선택하세요.');
-        myHand = myHand.concat(floorCards);
-        renderHand(true); // 선택 모드 활성화
+      gameState = 'DISCARD';
+
+      myHand = myHand.concat(floorCards);
+      floorCards = [];
+      selectedForDiscard = [];
+
+      renderHand(true);
+
+      log('바닥패 2장을 획득했습니다. 총 15장 중 버릴 카드 2장을 선택하세요.');
+
+      showModal(
+        '디카드',
+        '손패에서 버릴 카드 2장을 선택하세요. 카드를 두 장 선택하면 확인 창이 나타납니다.',
+        `<button class="game-btn pass" type="button" onclick="hideModal()">카드 선택하기</button>`
+      );
     }
 
-    let selectedForDiscard = [];
     function renderHand(isDiscardMode = false) {
-        const container = document.getElementById('my-hand');
-        container.innerHTML = '';
-        document.getElementById('hand-count').innerText = myHand.length;
+      const container = document.getElementById('my-hand');
 
-        myHand.forEach((c, idx) => {
-            let div = document.createElement('div');
-            div.className = 'card';
-            if (c.suit === '♥' || c.suit === '◆') div.classList.add('red');
-            div.id = `card-el-${idx}`;
-            
-            let rankStr = c.rank;
-            if (c.rank === 11) rankStr = 'J';
-            if (c.rank === 12) rankStr = 'Q';
-            if (c.rank === 13) rankStr = 'K';
-            if (c.rank === 14) rankStr = 'A';
-            if (c.type === 'BLACK_JOKER') rankStr = 'BIZ';
-            if (c.type === 'COLOR_JOKER') rankStr = 'COL';
+      container.innerHTML = '';
+      document.getElementById('hand-count').innerText = myHand.length;
 
-            div.innerHTML = `<span style="font-size:10px">${c.suit}</span><span style="font-size:14px">${rankStr}</span>`;
-            
-            if (isDiscardMode) {
-                div.ON-CLICK = () => toggleDiscardSelect(idx);
-            }
-            container.appendChild(div);
+      const sorted = myHand
+        .map((card, originalIndex) => ({ card, originalIndex }))
+        .sort((a, b) => {
+          const suitOrder = {
+            '♠': 0,
+            '♦': 1,
+            '♥': 2,
+            '♣': 3,
+            'JOKER': 4
+          };
+
+          const suitDiff = suitOrder[a.card.suit] - suitOrder[b.card.suit];
+          if (suitDiff !== 0) return suitDiff;
+
+          return a.card.rank - b.card.rank;
         });
+
+      sorted.forEach(({ card, originalIndex }) => {
+        const div = document.createElement('div');
+
+        div.className = 'card';
+        div.id = `card-el-${originalIndex}`;
+
+        if (card.suit === '♥' || card.suit === '♦') {
+          div.classList.add('red');
+        }
+
+        if (card.suit === 'JOKER') {
+          div.classList.add('joker-card');
+        }
+
+        if (selectedForDiscard.includes(originalIndex)) {
+          div.classList.add('selected');
+        }
+
+        let rankStr = card.rank;
+
+        if (card.rank === 11) rankStr = 'J';
+        if (card.rank === 12) rankStr = 'Q';
+        if (card.rank === 13) rankStr = 'K';
+        if (card.rank === 14) rankStr = 'A';
+
+        if (card.type === 'BLACK_JOKER') rankStr = 'BIZ';
+        if (card.type === 'COLOR_JOKER') rankStr = 'COL';
+
+        const suitText = card.suit === 'JOKER'
+          ? (card.type === 'BLACK_JOKER' ? 'JOKER' : 'COLOR')
+          : card.suit;
+
+        div.innerHTML = `
+          <span style="font-size:10px">${suitText}</span>
+          <span style="font-size:14px">${rankStr}</span>
+        `;
+
+        if (isDiscardMode) {
+          div.onclick = () => toggleDiscardSelect(originalIndex);
+        }
+
+        container.appendChild(div);
+      });
     }
 
     function toggleDiscardSelect(idx) {
-        const el = document.getElementById(`card-el-${idx}`);
-        if(selectedForDiscard.includes(idx)) {
-            selectedForDiscard = selectedForDiscard.filter(i => i !== idx);
-            el.classList.remove('selected');
-        } else {
-            if(selectedForDiscard.length < 2) {
-                selectedForDiscard.push(idx);
-                el.classList.add('selected');
-            }
-        }
+      if (gameState !== 'DISCARD') return;
 
-        if(selectedForDiscard.length === 2) {
-            showModal('디카드 완료', '선택한 2장의 카드를 버리시겠습니까?', `<button class="game-btn" ON-CLICK="confirmDiscard()">확인</button>`);
-        }
+      if (selectedForDiscard.includes(idx)) {
+        selectedForDiscard = selectedForDiscard.filter((i) => i !== idx);
+      } else {
+        if (selectedForDiscard.length >= 2) return;
+        selectedForDiscard.push(idx);
+      }
+
+      renderHand(true);
+
+      if (selectedForDiscard.length === 2) {
+        showModal(
+          '디카드 완료',
+          '선택한 2장의 카드를 버리시겠습니까?',
+          `
+            <button class="game-btn" type="button" onclick="confirmDiscard()">확인</button>
+            <button class="game-btn pass" type="button" onclick="cancelDiscardConfirm()">다시 선택</button>
+          `
+        );
+      }
+    }
+
+    function cancelDiscardConfirm() {
+      hideModal();
+      renderHand(true);
     }
 
     function confirmDiscard() {
-        hideModal();
-        selectedForDiscard.sort((a,b) => b - a);
-        selectedForDiscard.forEach(idx => myHand.splice(idx, 1));
-        selectedForDiscard = [];
-        renderHand();
-        
-        // 기루다 선택 팝업 오픈
-        let btnHtml = '';
-        suits.forEach(s => {
-            btnHtml += `<button class="game-btn" ON-CLICK="selectTrump('${s}')">${suitNames[s]} (${s})</button>`;
+      hideModal();
+
+      selectedForDiscard
+        .sort((a, b) => b - a)
+        .forEach((idx) => {
+          myHand.splice(idx, 1);
         });
-        showModal('기루다 선언', '이번 라운드의 기루다 문양을 선택하세요.', btnHtml);
+
+      selectedForDiscard = [];
+
+      renderHand(false);
+
+      let btnHtml = '';
+
+      suits.forEach((suit) => {
+        btnHtml += `
+          <button class="game-btn" type="button" onclick="selectTrump('${suit}')">
+            ${suitNames[suit]} (${suit})
+          </button>
+        `;
+      });
+
+      showModal(
+        '기루다 선언',
+        '이번 라운드의 기루다 문양을 선택하세요.',
+        btnHtml
+      );
     }
 
-    function selectTrump(s) {
-        hideModal();
-        trumpSuit = s;
-        log(`기루다 선언 완료: [ ${suitNames[s]} (${s}) ]`);
-        
-        // 데모 라운드 종료 테스트용 버튼 제공
-        showModal('테스트 완료', 'UI 가시성과 모달 팝업 느낌이 어떤지 확인해보세요!', `<button class="game-btn" ON-CLICK="nextRoundDemo()">다음 라운드로 넘어가기</button>`);
+    function selectTrump(suit) {
+      hideModal();
+
+      trumpSuit = suit;
+      gameState = 'TRUMP_SELECTED';
+
+      log(`기루다 선언 완료: ${suitNames[suit]} (${suit})`);
+
+      showModal(
+        '라운드 준비 완료',
+        `배팅 ${currentBid}점 / 기루다 ${suitNames[suit]} (${suit}) 선언까지 완료되었습니다.`,
+        `
+          <button class="game-btn" type="button" onclick="nextRoundDemo()">
+            다음 라운드 테스트
+          </button>
+        `
+      );
     }
 
     function nextRoundDemo() {
-        hideModal();
-        dealerIndex = (dealerIndex + 1) % 4; // 선 마커 오른쪽 이동
-        updateBadges();
-        log('선 마커가 다음 플레이어에게 이동했습니다.');
-        startNewGame();
-    }
-</script>
+      hideModal();
 
+      dealerIndex = (dealerIndex + 1) % 4;
+      roundNumber += 1;
+
+      updateBadges();
+      log('선 마커가 오른쪽 플레이어에게 이동했습니다.');
+
+      startNewGame();
+    }
+
+    // 첫 로딩 때에도 UI가 정상적으로 보이도록 초기화
+    updateBadges();
+    renderHand();
+    renderOpponentHands();
+  </script>
 </body>
 </html>
